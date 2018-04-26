@@ -15,6 +15,7 @@ EOM
 
 # Parameters
 MASTER=false
+INSTALL_DRIVERS=false
 MASTER_IP=""
 MASTER_USER=$USER
 MASTER_HOME=$HOME
@@ -23,15 +24,19 @@ LOCAL_USER=$USER
 MACHINE_ID="1"
 MACHINE_NAME="lg"$MACHINE_ID
 TOTAL_MACHINES="3"
+INSTALL_DRIVERS_CHAR="n"
 LG_FRAMES="lg3 lg1 lg2"
 OCTET="42"
 SCREEN_ORIENTATION="V"
 GIT_FOLDER_NAME="liquid-galaxy"
 GIT_URL="https://github.com/LiquidGalaxyLAB/liquid-galaxy"
 EARTH_DEB="http://dl.google.com/dl/earth/client/current/google-earth-stable_current_i386.deb"
+if [ `getconf LONG_BIT` = "64" ]; then
+EARTH_DEB="http://dl.google.com/dl/earth/client/current/google-earth-stable_current_amd64.deb"
+fi
 EARTH_FOLDER="/opt/google/earth/pro/"
 NETWORK_INTERFACE=$(/sbin/route -n | grep "^0.0.0.0" | rev | cut -d' ' -f1 | rev)
-NETWORK_INTERFACE_MAC=$(ifconfig | grep $NETWORK_INTERFACE | awk '{print $5}')
+NETWORK_INTERFACE_MAC=$(/sbin/ifconfig | grep $NETWORK_INTERFACE | awk '{print $5}')
 SSH_PASSPHRASE=""
 
 read -p "Machine id (i.e. 1 for lg1) (1 == master): " MACHINE_ID
@@ -47,8 +52,8 @@ else
 	read -p "Master local user password (i.e. lg password): " MASTER_PASSWORD
 fi
 read -p "Total machines count (i.e. 3): " TOTAL_MACHINES
-read -p "LG frames (i.e. lg3 lg1 lg2): " LG_FRAMES
 read -p "Unique number that identifies your Galaxy (octet) (i.e. 42): " OCTET
+read -p "Do you want to install extra drivers? (y/n): " INSTALL_DRIVERS_CHAR
 
 #
 # Pre-start
@@ -66,6 +71,26 @@ if [ $MASTER == false ]; then
 	)
 fi
 
+mid=$((TOTAL_MACHINES / 2))
+
+array=()
+
+for j in `seq $((mid + 2)) $TOTAL_MACHINES`;
+do
+    array+=("lg"$j)
+done
+
+for j in `seq 1 $((mid+1))`;
+do
+    array+=("lg"$j)
+done
+
+printf -v LG_FRAMES "%s " "${array[@]}"
+
+if [ $INSTALL_DRIVERS_CHAR == "y" ] || [$INSTALL_DRIVERS_CHAR == "Y" ] ; then
+	INSTALL_DRIVERS=true
+fi
+
 cat << EOM
 
 Liquid Galaxy will be installed with the following configuration:
@@ -75,7 +100,8 @@ MACHINE_ID: $MACHINE_ID
 MACHINE_NAME: $MACHINE_NAME $PRINT_IF_NOT_MASTER
 TOTAL_MACHINES: $TOTAL_MACHINES
 OCTET (UNIQUE NUMBER): $OCTET
-GIT_URL: $GIT_URL 
+INSTALL_DRIVERS: $INSTALL_DRIVERS
+GIT_URL: $GIT_URL
 GIT_FOLDER: $GIT_FOLDER_NAME
 EARTH_DEB: $EARTH_DEB
 EARTH_FOLDER: $EARTH_FOLDER
@@ -104,22 +130,29 @@ sudo -v
 # General
 #
 
+export DEBIAN_FRONTEND=noninteractive
+
 # Update OS
 echo "Checking for system updates..."
-sudo apt-get -qq update > /dev/null
+sudo apt-get update
 
 echo "Upgrading system packages ..."
-sudo apt-get -qq upgrade > /dev/null
-sudo apt-get -qq dist-upgrade > /dev/null
+sudo apt-get -yq upgrade
 
 echo "Installing new packages..."
-sudo apt-get install -qq git chromium-browser nautilus openssh-server sshpass squid3 squid-cgi apache2 xdotool unclutter wmctrl > /dev/null
+sudo apt-get install -yq git chromium-browser nautilus openssh-server sshpass squid3 squid-cgi apache2 xdotool unclutter wmctrl
+
+if [ $INSTALL_DRIVERS == true ] ; then
+	echo "Installing extra drivers..."
+	sudo apt-get install -yq libfontconfig1:i386 libx11-6:i386 libxrender1:i386 libxext6:i386 libglu1-mesa:i386 libglib2.0-0:i386 libsm6:i386
+	sudo apt-get install nvidia-361
+fi
 
 echo "Installing Google Earth..."
 wget -q $EARTH_DEB
-sudo dpkg -i google-earth-stable*.deb > /dev/null 2>&1
-sudo apt-get -qq -f install > /dev/null
-sudo dpkg -i google-earth-stable*.deb > /dev/null 2>&1
+sudo dpkg -i google-earth-stable*.deb
+sudo apt-get -yq -f install
+sudo dpkg -i google-earth-stable*.deb
 rm google-earth-stable*.deb
 
 echo "Setting up RAM disk for Google Earth cache"
@@ -144,9 +177,9 @@ gsettings set org.gnome.desktop.screensaver lock-enabled false
 gsettings set org.gnome.settings-daemon.plugins.power idle-dim false
 echo -e 'Section "ServerFlags"\nOption "blanktime" "0"\nOption "standbytime" "0"\nOption "suspendtime" "0"\nOption "offtime" "0"\nEndSection' | sudo tee -a /etc/X11/xorg.conf > /dev/null
 gsettings set org.compiz.unityshell:/org/compiz/profiles/unity/plugins/unityshell/ launcher-hide-mode 1
-sudo update-alternatives --set x-www-browser /usr/bin/chromium-browser --quiet
-sudo update-alternatives --set gnome-www-browser /usr/bin/chromium-browser --quiet
-sudo apt-get remove --purge -qq update-notifier* > /dev/null
+sudo update-alternatives --set x-www-browser /usr/bin/chromium-browser
+sudo update-alternatives --set gnome-www-browser /usr/bin/chromium-browser
+sudo apt-get remove --purge -yq update-notifier*
 
 #
 # Liquid Galaxy
@@ -154,7 +187,7 @@ sudo apt-get remove --purge -qq update-notifier* > /dev/null
 
 # Setup Liquid Galaxy files
 echo "Setting up Liquid Galaxy..."
-git clone -q $GIT_URL
+git clone $GIT_URL
 
 sudo cp -r $GIT_FOLDER_NAME/earth/ $HOME
 sudo ln -s $EARTH_FOLDER $HOME/earth/builds/latest
@@ -213,7 +246,7 @@ if [ $MASTER == true ]; then
 	sudo cp -r /root/.ssh ssh-files/root/ 2> /dev/null
 	mkdir -p ssh-files/user/
 	sudo cp -r $HOME/.ssh ssh-files/user/
-	sudo zip -FSr "ssh-files.zip" ssh-files > /dev/null
+	sudo zip -FSr "ssh-files.zip" ssh-files
 	if [ $(pwd) != $HOME ]; then
 		sudo mv ssh-files.zip $HOME/ssh-files.zip
 	fi
@@ -308,7 +341,7 @@ echo -e "[Desktop Entry]\nName=LG\nExec=bash "$HOME"/bin/startup-script.sh\nType
 # Web interface
 if [ $MASTER == true ]; then
 	echo "Installing web interface (master only)..."
-	sudo apt-get -qq install php php-cgi libapache2-mod-php > /dev/null
+	sudo apt-get -yq install php php-cgi libapache2-mod-php
 	sudo touch /etc/apache2/httpd.conf
 	sudo sed -i '/accept.lock/d' /etc/apache2/apache2.conf
 	sudo rm /var/www/html/index.html
@@ -324,10 +357,15 @@ sudo rm -r $GIT_FOLDER_NAME
 #
 
 echo "Cleaning up..."
-sudo apt-get -qq autoremove > /dev/null
+sudo apt-get -yq autoremove
+
+if [ `getconf LONG_BIT` = "64" ]; then
+echo “Installing additional libraries for 64 bit OS”
+sudo apt-get install -y libfontconfig1:i386 libx11-6:i386 libxrender1:i386 libxext6:i386 libglu1-mesa:i386 libglib2.0-0:i386 libsm6:i386
+fi
 
 echo "Liquid Galaxy installation completed! :-)"
-echo "Press any key to reboot now"
+echo "Press ENTER key to reboot now"
 read
 reboot
 
