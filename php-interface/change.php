@@ -51,8 +51,11 @@ if (isset($_REQUEST['planet']) and ($_REQUEST['planet'] != '')) {
   $action = explode('-', $_REQUEST['query']);
     if (($action[0] == 'peruse') and isset($action[1])) {
         if ($action[1] == 'off') {
-            exec('/home/lg/bin/lg-show-window Earth');
+            exec('/home/lg/bin/lg-show-window earth');
             echo "Attempting to show google earth again";
+        } else if ($action[1] == 'on') {
+            exec('/home/lg/bin/lg-show-window chromium');
+            echo "Attempting to show peruse on chromium";
         } else {
             #exec('/home/lg/bin/lg-peruse-a-rue 10.42.42.1 99 '.$action[1]);
             exec('/home/lg/bin/lg-show-window Chromium');
@@ -107,7 +110,7 @@ if (isset($_REQUEST['planet']) and ($_REQUEST['planet'] != '')) {
 
   foreach ($layerarray as $linenumber => $line) {
     # echo $linenumber . PHP_EOL . $line; #debug
-    if ($line == $_REQUEST['layer']) {
+    if ($line == $_REQUEST['`']) {
       echo("Disabling layer " . $_REQUEST['name']);
       unset($layerarray[$linenumber]);
       $foundlayer = TRUE;

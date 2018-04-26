@@ -116,9 +116,14 @@ VENDOR >= ATI {
     }}
 }
 VENDOR >= NVIDIA {
-    SETTINGS {
-        Render/pointAndLineSmoothEnable = true
-    }
+    CHIPSET >= Quadro {
+        SETTINGS {
+            Render/pointAndLineSmoothEnable = true
+    }}
+    CHIPSET >= NVIDIA Quadro {
+        SETTINGS {
+            Render/pointAndLineSmoothEnable = true
+    }}
 }
 
 OS = linux {

@@ -23,16 +23,13 @@ FRAME_NO="$(cat /home/lg/frame)"
 echo "MY FRAME = \"${FRAME_NO}\"."
 
 
+	frame=$(($(echo $HOSTNAME | cut -c 3)-1))
 	if [[ ${frame} -gt $(( ${LG_FRAMES_MAX}/2 )) ]] ; then
 	    frame="$(( ${frame} - ${LG_FRAMES_MAX} ))"
 	fi
+	echo "starting chrome with offset = \"${frame}\"."
 	killall chromium-browser
-	if [[ $frame -eq 0 ]]
-	then
-		export DISPLAY=:0 && chromium-browser --incognito --noerrdialogs --disable-session-crashed-bubble --disable-infobars --start-fullscreen 'http://lg8:8086/display/?yawoffset=0' &
-	else
-		export DISPLAY=:0 && chromium-browser --incognito --noerrdialogs --disable-session-crashed-bubble --disable-infobars --start-fullscreen 'http://lg8:8086/display/?yawoffset='${frame} &
-	fi
+	export DISPLAY=:0 && chromium-browser --incognito --noerrdialogs --disable-session-crashed-bubble --disable-infobars --start-fullscreen http://10.42.42.8:8086/display/?yawoffset=$frame &
 
 if [[ $FRAME_NO = 0 ]]; then
     #nitrogen --set-zoom-fill ${XDG_PICTURES_DIR}/backgrounds/lg-bg-${FRAME_NO}.png &

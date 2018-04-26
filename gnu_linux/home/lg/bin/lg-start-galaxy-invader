@@ -1,0 +1,12 @@
+export DISPLAY=:0;
+/home/lg/GalaxyInvader/game.x86 host 0 0.36 1111 &
+sleep 1
+ssh lg@lg2 'export DISPLAY=:0; ./GalaxyInvader/game.x86 client 25.7 0.36 1111 10.42.42.1' &
+ssh lg@lg3 'export DISPLAY=:0; ./GalaxyInvader/game.x86 client 51.4 0.36 1111 10.42.42.1' &
+#ssh lg@lg4 'export DISPLAY=:0; ./GalaxyInvader/game.x86 client 77.1 0.36 1111 10.42.42.1' &
+ssh lg@lg5 'export DISPLAY=:0; ./GalaxyInvader/game.x86 client -77.1 0.36 1111 10.42.42.1' &
+ssh lg@lg6 'export DISPLAY=:0; ./GalaxyInvader/game.x86 client -51.4 0.36 1111 10.42.42.1' &
+ssh lg@lg7 'export DISPLAY=:0; ./GalaxyInvader/game.x86 client -25.7 0.36 1111 10.42.42.1' &
+
+
+
