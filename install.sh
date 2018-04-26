@@ -16,20 +16,20 @@ EOM
 # Parameters
 MASTER=false
 INSTALL_DRIVERS=false
-MASTER_IP=""
+MASTER_IP="10.200.144.63"
 MASTER_USER=$USER
 MASTER_HOME=$HOME
-MASTER_PASSWORD=""
+MASTER_PASSWORD="liquid"
 LOCAL_USER=$USER
 MACHINE_ID="1"
 MACHINE_NAME="lg"$MACHINE_ID
-TOTAL_MACHINES="3"
+TOTAL_MACHINES="7"
 INSTALL_DRIVERS_CHAR="n"
-LG_FRAMES="lg3 lg1 lg2"
+LG_FRAMES="lg5 lg6 lg7 lg1 lg2 lg3 lg4"
 OCTET="42"
 SCREEN_ORIENTATION="V"
 GIT_FOLDER_NAME="liquid-galaxy"
-GIT_URL="https://github.com/LiquidGalaxyLAB/liquid-galaxy"
+GIT_URL="https://github.com/Scout24/liquid-galaxy"
 EARTH_DEB="http://dl.google.com/dl/earth/client/current/google-earth-stable_current_i386.deb"
 if [ `getconf LONG_BIT` = "64" ]; then
 EARTH_DEB="http://dl.google.com/dl/earth/client/current/google-earth-stable_current_amd64.deb"
