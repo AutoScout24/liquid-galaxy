@@ -23,7 +23,7 @@ Other details such as the account name or user password are not relevant, write 
 
 Get and execute installation file on the target machine (from any user folder):
 
-`bash <(curl -s https://raw.githubusercontent.com/LiquidGalaxyLAB/liquid-galaxy/master/install.sh)`
+`bash <(curl -s https://raw.githubusercontent.com/Scout24/liquid-galaxy/master/install.sh)`
 
 x64 bits OS might require these additional libraries in order to start Google Earth:
 
